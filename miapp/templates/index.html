@@ -2,12 +2,21 @@
 
 
 {% block title %}
-    Inicio
+    {{titulo}}
 {% endblock %}
 
 
 {% block content %}
-    <h1 class="title">Página Index</h1>
-    <h2>Usango templates</h2>
+{% if mensaje %}
+        <p> Mensaje: {{mensaje}} </p>
+    {% else %}
+    <strong>El Mensaje no tiene contenido</strong>
+    {% endif %}
+
+
+    {% include 'listado_estudiantesregistrados.html' with encabezado="Estudiantes Registrados" %}
+{% include 'filtros.html' with encabezado="Uso de Filtros" %}
+    
+    <p>Año: 2023</p>
 {% endblock %}
 

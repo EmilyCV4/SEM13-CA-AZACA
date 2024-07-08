@@ -1,4 +1,9 @@
 from django.shortcuts import render, HttpResponse, redirect
+from miapp.models import Articulo
+from miapp.models import Articulo
+from django.db.models import Q
+from miapp.forms import FormArticulo
+from django.contrib import messages
 
 
 # Create your views here.
@@ -26,27 +31,37 @@ layout = """
 
 
 def index(request):
-    return render(request, 'index.html')
+    estudiantes = [ 'Isabella Caballero', 
+                    'Alejandro Hermitaño',
+                    'Joan Palomino',
+                    'Pierre Bernaola']
+    estudiantes = []
+
+
+    return render(request,'index.html', {
+        'titulo':'Inicio',
+        'mensaje':'Proyecto Web Con DJango',
+        'estudiantes': estudiantes
+    })
 
 
 def saludo(request):
-    return render(request,'saludo.html')
+    return render(request,'saludo.html',{
+        'titulo':'Saludo',
+        'autor_saludo':'Emily Cañazaca'
+    })
 
 
 def rango(request):
     a = 10
     b = 20
-    resultado = f"""
-        <h2> Números de [{a},{b}] </h2>
-        Resultado: <br>
-        <ul> 
-    """
-    
-    while a<=b:
-        resultado +=  f"<li> {a} </li>"
-        a+=1
-    resultado += "</ul"
-    return HttpResponse(layout + resultado)
+    rango_numeros = range(a,b+1)
+    return render(request,'rango.html',{
+        'titulo':'Rango',
+        'a':a,
+        'b':b,
+        'rango_numeros':rango_numeros
+    })
 
 
 def rango2(request,a=0,b=100):
@@ -61,3 +76,84 @@ def rango2(request,a=0,b=100):
         a+=1
     resultado += "</ul"
     return HttpResponse(layout + resultado)
+
+def buscar_articulo(request):
+    try:
+        articulo = Articulo.objects.get(id=1000)
+        resultado = f"""Articulo: 
+                        <br> <strong>ID:</strong> {articulo.id} 
+                        <br> <strong>Título:</strong> {articulo.titulo} 
+                        <br> <strong>Contenido:</strong> {articulo.contenido}
+                        """
+    except:
+        resultado = "<h1> Artículo No Encontrado </h1>"
+    return HttpResponse(resultado)
+
+def editar_articulo(request, id):
+    articulo = Articulo.objects.get(pk=id)
+
+
+    articulo.titulo = "Enseñanza onLine en la UNTELS"
+    articulo.contenido = "Aula Virtual, Google Meet, Portal Académico, Google Classroom..."
+    articulo.publicado = False
+
+
+    articulo.save()
+    return HttpResponse(f"Articulo Editado: {articulo.titulo} - {articulo.contenido}")
+
+def listar_articulos(request):
+    articulos = Articulo.objects.all();
+    """articulos = Articulo.objects.filter(
+        Q(titulo__contains="Py") |
+        Q(titulo__contains="Hab")
+    )"""
+    return render(request, 'listar_articulos.html',{
+        'articulos': articulos,
+        'titulo': 'Listado de Artículos'
+    })
+
+
+def eliminar_articulo(request, id):
+    articulo = Articulo.objects.get(pk=id)
+    articulo.delete()
+    return redirect('listar_articulos')
+
+def save_articulo(request):
+    if request.method == 'POST':
+        titulo = request.POST['titulo']
+        if len(titulo)<=5:
+            return HttpResponse("<h2>El tamaño del título es pequeño, intente nuevamente</h2>")
+        contenido = request.POST['contenido']
+        publicado = request.POST['publicado']
+
+        articulo = Articulo(
+    titulo = titulo,
+    contenido = contenido,
+    publicado = publicado
+)
+articulo.save()
+return redirect('listar_articulos')
+#return HttpResponse(articulo.titulo + ' -  ' + articulo.contenido + ' - ' + str(articulo.publicado))
+
+
+def create_articulo(request):
+    return render(request, 'create_articulo.html')
+
+def create_full_articulo(request):
+    if request.method == 'POST':
+        formulario = FormArticulo(request.POST)
+       if formulario.is_valid():
+   data_form = formulario.cleaned_data
+   # Hay 2 formar de recuperar la información
+   titulo  = data_form.get('titulo')
+   contenido = data_form['contenido']
+   publicado = data_form['publicado']
+  articulo.save()
+
+
+# Crear un mensaje flash (Sesión que solo se muestra 1 vez)
+messages.success(request, f'Se agregó correctamente el artículo {articulo.id}')
+
+
+return redirect('listar_articulos')
+#return HttpResponse(articulo.titulo + ' -  ' + articulo.contenido + ' - ' + str(articulo.publicado))
